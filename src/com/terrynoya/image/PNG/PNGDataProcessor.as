@@ -1,8 +1,7 @@
 package com.terrynoya.image.PNG
 {
-	import com.terrynoya.common.color.ColorInfo;
-	import com.terrynoya.common.color.ColorUtil;
 	import com.terrynoya.image.BMP.BitmapInfo;
+	import com.terrynoya.image.PNG.chunk.Chunk_tRNS;
 	import com.terrynoya.image.PNG.chunk.IHDR;
 	import com.terrynoya.image.PNG.chunk.PLTE;
 	import com.terrynoya.image.PNG.enums.PNGEnterlacing;
@@ -14,31 +13,29 @@ package com.terrynoya.image.PNG
 	import com.terrynoya.image.PNG.rowFilter.UpFilter;
 	import com.terrynoya.io.BufferedByteReader;
 	import com.terrynoya.io.ByteUtil;
-	
-	import flash.display.BitmapData;
+
 	import flash.utils.ByteArray;
 
 	public class PNGDataProcessor
 	{
-		private var _image:BitmapData;
 		private var _decoder:PNGDecoder;
-		
+
 		public function PNGDataProcessor(decoder:PNGDecoder)
 		{
 			this._decoder = decoder;
 		}
-		
+
 		public function decode(bytes:ByteArray,ihdr:IHDR):BitmapInfo
 		{
 			bytes.uncompress();
 			if(ihdr.interLaceMode == PNGEnterlacing.ADAM_7_INTERLACING)
 			{
-				bytes = this.doInterlacing(bytes);			
+				bytes = this.doInterlacing(bytes);
 			}
-			var imageBytes:ByteArray = this.doFiltering(bytes,ihdr.width,ihdr.height,ihdr.bpp);	
+			var imageBytes:ByteArray = this.doFiltering(bytes,ihdr.width,ihdr.height,ihdr.bpp);
 			return this.bytesToImage(imageBytes,ihdr);
 		}
-		
+
 		private function bytesToImage(bytes:ByteArray,ihdr:IHDR):BitmapInfo
 		{
 			if((ihdr.bitDepth == 16 || ihdr.bitDepth == 8) && ihdr.colorType == PNGColorType.RGB_ALPHA)
@@ -59,134 +56,100 @@ package com.terrynoya.image.PNG
 			}
 			else if(ihdr.colorType == PNGColorType.PALETTE)
 			{
-				return this.paletteToImage(bytes,ihdr.width,ihdr.height,this._decoder.palette);
+				return this.paletteToImage(bytes,ihdr.width,ihdr.height,this._decoder.palette, _decoder.tRNS);
 			}
-			return null; 
+			return null;
 		}
-		
+
 		private function grayScale16ToImage(bytes:ByteArray,width:int,height:int,bitDepth:int):BitmapInfo
 		{
 			var bmpInfo:BitmapInfo = new BitmapInfo(width,height);
-			var colors:Array = new Array();
 			var grayPalette:GrayScalePalette = new GrayScalePalette();
 			grayPalette.make(bitDepth);
-			for (var i:int = 0; i < height; i++) 
-			{
-				for (var j:int = 0; j < width; j++) 
-				{
-					var colorInfo:ColorInfo = new ColorInfo();
-					colorInfo.x = j;
-					colorInfo.y = i;
-					var index:uint = bytes.readUnsignedShort();
-					var alpha:uint = bytes.readUnsignedShort();
-					colorInfo.color = grayPalette.getColorAt(index) | alpha << 24;
-					colors.push(colorInfo);
-				}
+
+			var len:int = width * height;
+			var grid:Vector.<uint> = new Vector.<uint>(len);
+			for (var pointer:int = 0; pointer<len; pointer++) {
+				grid[pointer] = grayPalette.getColorAt(bytes.readUnsignedShort()) | bytes.readUnsignedShort() << 24;
 			}
-			bmpInfo.colors = colors;
+			bmpInfo.pixels = grid;
 			return bmpInfo;
 		}
-		
+
 		private function grayScaleAlpha8BitToImage(bytes:ByteArray,width:int,height:int,bitDepth:int):BitmapInfo
 		{
 			var bmpInfo:BitmapInfo = new BitmapInfo(width,height);
-			var colors:Array = new Array();
 			var grayPalette:GrayScalePalette = new GrayScalePalette();
 			grayPalette.make(bitDepth);
-			for (var i:int = 0; i < height; i++) 
-			{
-				for (var j:int = 0; j < width; j++) 
-				{
-					var colorInfo:ColorInfo = new ColorInfo();
-					colorInfo.x = j;
-					colorInfo.y = i;
-					var index:uint = bytes.readUnsignedByte();
-					var alpha:uint = bytes.readUnsignedByte();
-					colorInfo.color = grayPalette.getColorAt(index) | (alpha << 24);
-					colors.push(colorInfo);
-				}
+
+			var len:int = width * height;
+			var grid:Vector.<uint> = new Vector.<uint>(len);
+			for (var pointer:int = 0; pointer<len; pointer++) {
+				grid[pointer] = grayPalette.getColorAt(bytes.readUnsignedByte()) | (bytes.readUnsignedByte() << 24);
 			}
-			bmpInfo.colors = colors;
+			bmpInfo.pixels = grid;
 			return bmpInfo;
 		}
-		
+
 		private function grayScaleAlpha16ToImage(bytes:ByteArray,width:int,height:int,bitDepth:int):BitmapInfo
 		{
 			var bmpInfo:BitmapInfo = new BitmapInfo(width,height);
-			var colors:Array = new Array();
 			var grayPalette:GrayScalePalette = new GrayScalePalette();
 			grayPalette.make(bitDepth);
-			for (var i:int = 0; i < height; i++) 
-			{
-				for (var j:int = 0; j < width; j++) 
-				{
-					var colorInfo:ColorInfo = new ColorInfo();
-					colorInfo.x = j;
-					colorInfo.y = i;
-					var index:uint = bytes.readUnsignedShort();
-					var alpha:uint = bytes.readUnsignedShort();
-					colorInfo.color = grayPalette.getColorAt(index) | alpha << 24;
-					colors.push(colorInfo);
-				}
+
+			var len:int = width * height;
+			var grid:Vector.<uint> = new Vector.<uint>(len);
+			for (var pointer:int = 0; pointer<len; pointer++) {
+				grid[pointer] = grayPalette.getColorAt(bytes.readUnsignedShort()) | bytes.readUnsignedShort() << 24;
 			}
-			bmpInfo.colors = colors;
+			bmpInfo.pixels = grid;
 			return bmpInfo;
 		}
-		
-		private function paletteToImage(bytes:ByteArray,width:int,height:int,palette:PLTE):BitmapInfo
+
+		private function paletteToImage(bytes:ByteArray, width:int, height:int, palette:PLTE, transparency:Chunk_tRNS):BitmapInfo
 		{
 			var bmpInfo:BitmapInfo = new BitmapInfo(width,height);
-			var colors:Array = new Array();
-			for (var i:int = 0; i < height; i++) 
-			{
-				for (var j:int = 0; j < width; j++) 
-				{
-					var colorInfo:ColorInfo = new ColorInfo();
-					colorInfo.x = j;
-					colorInfo.y = i;
-					var index:uint = bytes.readUnsignedByte();
-					colorInfo.color = palette.getColorAt(index);
-					colors.push(colorInfo);
+			var len:int = width * height;
+			var grid:Vector.<uint> = new Vector.<uint>(len);
+			var pointer:int;
+			var index:uint;
+			if (transparency) {
+				for (pointer = 0; pointer<len; pointer++) {
+					index = bytes.readUnsignedByte();
+					grid[pointer] = palette.getColorRGB(index) | transparency.getAlphaAt(index) << 24;
+				}
+			} else {
+				for (pointer = 0; pointer<len; pointer++) {
+					grid[pointer] = palette.getColorAt(bytes.readUnsignedByte());
 				}
 			}
-			bmpInfo.colors = colors; 
+			bmpInfo.pixels = grid;
 			return bmpInfo;
 		}
-		
+
 		private function rgbaToImage(bytes:ByteArray,width:int,height:int):BitmapInfo
 		{
-			var bmpInfo:BitmapInfo = new BitmapInfo(width,height);
-			var colors:Array = new Array();
-			for (var i:int = 0; i < height; i++) 
-			{
-				for (var j:int = 0; j < width; j++) 
-				{
-					var colorInfo:ColorInfo = new ColorInfo();
-					colorInfo.x = j;
-					colorInfo.y = i;
-					var red:uint = bytes.readUnsignedByte();
-					var green:uint = bytes.readUnsignedByte();
-					var blue:uint = bytes.readUnsignedByte();
-					var alpha:uint = bytes.readUnsignedByte();
-					colorInfo.color = ColorUtil.getColor(red,green,blue,alpha);
-					colors.push(colorInfo);
-				}
+			var bmpInfo:BitmapInfo = new BitmapInfo(width, height);
+			var len:int = width * height;
+			var grid:Vector.<uint> = new Vector.<uint>(len, true);
+			for (var pointer:int = 0; pointer<len; pointer++) {
+				grid[pointer] = (bytes.readUnsignedByte() << 16 | bytes.readUnsignedByte() << 8 | bytes.readUnsignedByte() | bytes.readUnsignedByte() << 24); //RGBA
 			}
-			bmpInfo.colors = colors;
+			bmpInfo.pixels = grid;
 			return bmpInfo;
 		}
-		
+
 		private function doFiltering(bytes:ByteArray,width:int,height:int,bpp:int):ByteArray
 		{
 			var colorBytes:ByteArray = new ByteArray();
-			
+
 			var preLine:ByteArray;
 			var currentLine:ByteArray = new ByteArray();
-			var byteLen:int = width * bpp; 
-			
+			var byteLen:int = width * bpp;
+
 			var reader:BufferedByteReader = new BufferedByteReader(bytes.endian,bytes);
 			var rowBytes:ByteArray;
-			for (var y:int = 0; y < height; y++) 
+			for (var y:int = 0; y < height; y++)
 			{
 				var filter:int = bytes.readUnsignedByte();
 				rowBytes = reader.read(byteLen);
@@ -216,27 +179,7 @@ package com.terrynoya.image.PNG
 			}
 			return colorBytes;
 		}
-		
-		private function getColorByRow(bytes:ByteArray,row:int):Array
-		{
-			var rlt:Array = new Array();
-			var len:int = bytes.length / 4
-			for (var i:int = 0; i < len; i++) 
-			{
-				var color:ColorInfo = new ColorInfo();
-				var r:uint = bytes.readUnsignedByte();
-				var g:uint = bytes.readUnsignedByte();
-				var b:uint = bytes.readUnsignedByte();
-				var a:uint = bytes.readUnsignedByte();
-				color.color = ColorUtil.getColor(r,g,b);
-				color.y = row;
-				color.x = i;
-				rlt.push(color);
-			}
-			return rlt;
-			
-		}
-		
+
 		private function doInterlacing(bytes:ByteArray):ByteArray
 		{
 			return bytes;

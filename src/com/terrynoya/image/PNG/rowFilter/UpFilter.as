@@ -2,8 +2,6 @@ package com.terrynoya.image.PNG.rowFilter
 {
 	import flash.utils.ByteArray;
 	
-	import spark.layouts.RowAlign;
-
 	public class UpFilter
 	{
 		public function UpFilter()

@@ -9,5 +9,6 @@ package com.terrynoya.image.PNG
 		public static const pHYs:String = "pHYs";
 		public static const sBIT:String = "sBIT";
 		public static const tEXt:String = "tEXt";
+		public static const tRNS:String = "tRNS";
 	}
 }

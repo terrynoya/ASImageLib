@@ -11,10 +11,7 @@ package com.terrynoya.image.PNG.rowFilter
 		
 		public static function decode(rowBytes:ByteArray,bpp:int,currentRow:ByteArray,prevRow:ByteArray):void
 		{
-			for (var j:int = 0; j < rowBytes.length; j++) 
-			{
-				currentRow.writeByte(rowBytes.readByte());
-			}
+			currentRow.writeBytes(rowBytes);
 		}
 	}
 }

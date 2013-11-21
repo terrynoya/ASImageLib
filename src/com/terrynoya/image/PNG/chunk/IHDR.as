@@ -111,10 +111,10 @@ package com.terrynoya.image.PNG.chunk
 			this._filterMode = bytes.readByte();
 			this._interLaceMode = bytes.readByte();
 			
-			trace("width:",this._width);
-			trace("height:",this._height);
-			trace("bitDepth",this._bitDepth);
-			trace("colorType",this._colorType);
+			// trace("width:",this._width);
+			// trace("height:",this._height);
+			// trace("bitDepth",this._bitDepth);
+			// trace("colorType",this._colorType);
 		}
 	}
 }

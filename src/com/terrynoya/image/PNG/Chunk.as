@@ -45,8 +45,8 @@ package com.terrynoya.image.PNG
 			this._length = reader.readUnsignedInt();
 			this._type = reader.readMultiByte(4,Charset.ASCII);
 			this._data = reader.read(this._length);
-			trace(this._type);
-			trace("isCritical chunk:",ChunkNameValidator.isCriticalChunk(this._type));
+			// trace(this._type);
+			// trace("isCritical chunk:",ChunkNameValidator.isCriticalChunk(this._type));
 			if(this._length == 0 && reader.bytesAvailable == 0)
 			{
 				return;
@@ -54,7 +54,7 @@ package com.terrynoya.image.PNG
 			var checkLen:int = this._length + 4;
 			this._dataCRC = CRC32.getHash(reader.source,reader.position - checkLen,checkLen);
 			this._crc = reader.readUnsignedInt();
-			trace("data crc:",this._dataCRC.toString(16)," embed crc:",this._crc.toString(16));
+			// trace("data crc:",this._dataCRC.toString(16)," embed crc:",this._crc.toString(16));
 		}
 		
 		public function get isCRCMatch():Boolean 
