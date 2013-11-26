@@ -4,9 +4,11 @@ package com.terrynoya.io
 
 	public class ByteUtil
 	{
+		private static var tempBytes : ByteArray = new ByteArray();
+
 		public function ByteUtil()
 		{
-			
+
 		}
 		
 		public static function printBytes(bytes:ByteArray):String
@@ -24,13 +26,10 @@ package com.terrynoya.io
 		
 		public static function clone(source:ByteArray):ByteArray
 		{
-			var cloned:ByteArray = new ByteArray();
-			var len:int = source.length;
-			for (var i:int = 0; i < len; i++) 
-			{
-				cloned[i] = source[i];
-			}
-			return cloned;
+			tempBytes.clear();
+			tempBytes.writeObject(source);
+			tempBytes.position = 0;
+			return tempBytes.readObject();
 		}
 		
 		public static function clear(value:ByteArray):ByteArray

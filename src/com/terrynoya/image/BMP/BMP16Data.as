@@ -15,8 +15,7 @@ package com.terrynoya.image.BMP
 			
 			var bmpHeight:int = bmpInfoHeader.height;
 			var bmpWidth:int = bmpInfoHeader.width;
-			var bitCount:int = bmpInfoHeader.bitCount;
-			
+
 			var padding:int = (bmpWidth % 2 ) * 2;
 			
 			var pixels:Vector.<uint> = new Vector.<uint>(bmpWidth * bmpHeight, true);
@@ -26,7 +25,7 @@ package com.terrynoya.image.BMP
 				for(var k:int = 0; k < bmpWidth; k++)
 				{
 					var position:int = (bmpHeight - 1 - i) * bmpWidth + k;
-					var twoByte:int = bytesReader.readShot();
+					var twoByte:int = bytesReader.readShort();
 					pixels[position] = getColorByShort(twoByte);
 				}
 				bytesReader.position += padding;

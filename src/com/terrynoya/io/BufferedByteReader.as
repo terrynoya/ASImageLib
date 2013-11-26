@@ -70,7 +70,7 @@ package com.terrynoya.io
 			return this._source.readUnsignedShort();
 		}
 		
-		public function readShot():int
+		public function readShort():int
 		{
 			return this._source.readShort();
 		}
